@@ -1,40 +1,84 @@
 import streamlit as st
 import datetime
+import pandas as pd # Necesario para tablas bonitas
 
 # ==========================================
-# 1. CONFIGURACIÓN VISUAL (ESTILO LIMPIO)
+# 1. CONFIGURACIÓN VISUAL (FORZANDO MODO CLARO)
 # ==========================================
 st.set_page_config(
-    page_title="Kreación Kerkus | Finanzas",
+    page_title="Kreación Kerkus | Master",
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- CSS: COLORES CLAROS Y LEGIBLES ---
+# --- CSS MAESTRO: BLOQUEA EL MODO OSCURO ---
 st.markdown("""
 <style>
-    .stApp { background-color: #fdfbf7; color: #1a1a1a; }
-    h1, h2, h3 { font-family: 'Georgia', serif; color: #5d4037 !important; }
-    .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {
-        background-color: #fff !important; color: #000 !important; border: 1px solid #aaa !important;
+    /* FORZAR TEMA CLARO */
+    [data-testid="stAppViewContainer"] {
+        background-color: #fdfbf7; /* Crema muy suave */
+        color: #2b1b17; /* Marrón café oscuro */
     }
+    [data-testid="stSidebar"] {
+        background-color: #f0e6d2; /* Beige cuero */
+        border-right: 1px solid #bcaaa4;
+    }
+    [data-testid="stHeader"] {
+        background-color: #fdfbf7;
+    }
+    
+    /* TEXTOS Y TÍTULOS */
+    h1, h2, h3, h4, h5, h6, p, li, span, div, label {
+        color: #2b1b17 !important;
+        font-family: 'Source Sans Pro', sans-serif;
+    }
+    h1 {
+        font-family: 'Georgia', serif;
+        color: #5d4037 !important; /* Marrón chocolate */
+        border-bottom: 2px solid #daa520;
+    }
+    
+    /* INPUTS (CAJAS DE ESCRIBIR) - BLANCOS SIEMPRE */
+    .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"], .stTextArea textarea {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: 1px solid #8d6e63 !important;
+    }
+    
+    /* BOTONES */
     .stButton > button {
-        background-color: #daa520 !important; color: #000 !important; font-weight: bold; border: 1px solid #8b4513 !important;
+        background: linear-gradient(to bottom, #fff59d, #fbc02d);
+        color: #000000 !important;
+        border: 1px solid #f57f17 !important;
+        font-weight: bold !important;
     }
-    .stMetric { background-color: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
-    .stAlert { background-color: #fff3cd; color: #856404; }
+    .stButton > button:hover {
+        background: #fdd835 !important;
+    }
+
+    /* TABLAS Y DATAFRAMES */
+    [data-testid="stDataFrame"] {
+        background-color: white !important;
+        color: black !important;
+    }
+    
+    /* ALERTAS */
+    .stAlert { background-color: #fff9c4; color: #5d4037; border: 1px solid #fbc02d; }
+    
 </style>
 """, unsafe_allow_html=True)
 
-try: st.image("logo_kerkus.jpg", width=200)
+# LOGO
+try: st.image("logo_kerkus.jpg", width=220)
 except: st.title("🌿 Kerkus Magikus")
 
+
 # ==========================================
-# 2. DATOS INICIALES (COSTES Y RECETAS)
+# 2. DATOS MAESTROS
 # ==========================================
-# Estos son los costes base calculados de tus facturas.
-# Ahora podrás editarlos desde la App si cambian.
+
+# A. COSTES (Historial base)
 if 'costes_mp' not in st.session_state:
     st.session_state.costes_mp = {
         "SCI": 0.022, "Betaína de Coco": 0.012, "Coco Glucoside": 0.021, "SLSA": 0.069, "SCS": 0.016,
@@ -50,90 +94,90 @@ if 'costes_mp' not in st.session_state:
         "Avena Coloidal": 0.032, "Ortiga Verde": 0.060, "Aloe Vera 200x": 0.200,
         "Miel en Polvo": 0.085, "Semillas de Amapola": 0.057,
         "Pantenol (B5)": 0.116, "Hidroqueratina": 0.120, "Niacinamida (B3)": 0.200,
-        "Glicerina": 0.041, "Vitamina E": 0.166, "Leucidal": 0.183, "Euxyl Eco": 0.196,
+        "Glicerina": 0.041, "Vitamina E": 0.166,
         "AAEE (Geranio/Ylang)": 0.550, "AAEE (Naranja/Cedro)": 0.150, 
         "AAEE (Menta/Romero/Limón)": 0.200, "AAEE (Lavanda/Geranio)": 0.400,
-        "AAEE Salvia": 0.500, "AAEE Incienso": 1.00, "AAEE Sándalo": 0.66,
-        "Ácido Láctico": 0.05, "Bicarbonato": 0.01, "Consuelda": 0.086
+        "Ácido Láctico": 0.05, "Bicarbonato": 0.01
     }
 
+# B. RECETAS (Tus 6 Fórmulas Maestras)
+# NOTA: Cantidades divididas entre 10 para simular 1 unidad de ~90g-100g.
+# Si quieres hacer el lote completo de 1kg, pon "10" en cantidad.
 RECETAS = {
     "🧴 1. Champú Nutritivo (Pelo Seco)": {
+        "tipo": "Champú",
         "minimo_stock": 4, "conservacion": "Lugar fresco.",
         "ingredientes": {
             "SCI": 44.0, "Polvo de Arroz": 7.0, "Caolín": 3.0,
             "Ácido Esteárico": 5.0, "Alcohol Cetílico": 4.0, "Manteca de Karité": 6.0, "Oleato Almendras (Caléndula)": 6.0, "Aceite de Argán": 1.5,
             "Betaína de Coco": 8.5, "Pantenol (B5)": 1.5, "Hidroqueratina": 1.7, "Vitamina E": 0.8, "AAEE (Geranio/Ylang)": 1.6
         },
-        "instrucciones": "1. Mezclar polvos. 2. Fundir grasas. 3. Unir. 4. Activos en frío. 5. Prensar."
+        "instrucciones": "1. **Polvos:** Mezclar SCI, Arroz, Caolín.\n2. **Fusión:** Fundir Esteárico, Cetílico, Karité y Aceites.\n3. **Unión:** Mezclar fases.\n4. **Frío:** Añadir Betaína y Activos.\n5. **Fin:** Prensar."
     },
     "🌿 2. Champú Equilibrante (Pelo Normal)": {
+        "tipo": "Champú",
         "minimo_stock": 4, "conservacion": "Lugar fresco.",
         "ingredientes": {
             "SCI": 44.0, "Avena Coloidal": 6.5, "Caolín": 2.0, "Aloe Vera 200x": 0.8,
             "Ácido Esteárico": 5.0, "Alcohol Cetílico": 3.5, "Manteca de Karité": 4.5, "Manteca de Mango": 1.5, "Oleato Girasol (Manzanilla)": 6.0,
             "Betaína de Coco": 8.5, "Pantenol (B5)": 1.5, "Hidroqueratina": 1.7, "Vitamina E": 0.8, "AAEE (Naranja/Cedro)": 2.5
         },
-        "instrucciones": "1. Mezclar polvos. 2. Fundir grasas. 3. Unir. 4. Activos en frío. 5. Prensar."
+        "instrucciones": "1. **Polvos:** Mezclar SCI, Avena, Caolín, Aloe.\n2. **Fusión:** Fundir Esteárico, Cetílico, Mantecas y Oleato.\n3. **Unión:** Mezclar fases.\n4. **Frío:** Añadir Betaína y Activos.\n5. **Fin:** Prensar."
     },
     "🍏 3. Champú Purificante (Pelo Graso)": {
+        "tipo": "Champú",
         "minimo_stock": 4, "conservacion": "Lugar fresco.",
         "ingredientes": {
             "SCI": 46.0, "Arcilla Verde": 8.0, "Ortiga Verde": 4.0,
             "Ácido Esteárico": 5.0, "Alcohol Cetílico": 3.5, "Manteca de Karité": 3.0, "Oleato Pepita Uva (Romero)": 4.0, "Aceite de Jojoba": 1.0,
             "Betaína de Coco": 8.5, "Pantenol (B5)": 1.5, "Hidroqueratina": 1.0, "Vitamina E": 0.8, "AAEE (Menta/Romero/Limón)": 3.5
         },
-        "instrucciones": "1. Mezclar polvos. 2. Fundir grasas. 3. Unir. 4. Activos en frío. 5. Prensar."
+        "instrucciones": "1. **Polvos:** Mezclar SCI, Arcilla Verde, Ortiga.\n2. **Fusión:** Fundir Esteárico, Cetílico, Karité y Aceites.\n3. **Unión:** Mezclar fases.\n4. **Frío:** Añadir Betaína y Activos.\n5. **Fin:** Prensar."
     },
     "✨ 4. Acondicionador Seda (Todo tipo)": {
+        "tipo": "Acondicionador",
         "minimo_stock": 4, "conservacion": "❄️ RECOMENDADO: Nevera en verano.",
         "ingredientes": {
             "BTMS-50": 33.0, "Alcohol Cetílico": 9.0, "Manteca de Karité": 6.0, "Oleato Almendras (Caléndula)": 4.5, "Aceite de Argán": 1.5,
             "Hidroqueratina": 1.5, "Pantenol (B5)": 1.0, "Vitamina E": 0.6, "AAEE (Lavanda/Geranio)": 1.2
         },
-        "instrucciones": "1. Fundir todo. 2. Templar y añadir activos. 3. Enmoldar rápido."
+        "instrucciones": "1. **Fusión:** Fundir BTMS, Cetílico, Karité y Aceites.\n2. **Templado:** Retirar del fuego. Añadir Activos.\n3. **Fin:** Enmoldar rápido."
     },
     "☁️ 5. Limpiador Facial Nube de Arroz": {
+        "tipo": "Facial",
         "minimo_stock": 5, "conservacion": "Secar bien tras uso.",
         "ingredientes": {
             "SCI": 18.0, "Caolín": 8.0, "Avena Coloidal": 4.0, "Polvo de Arroz": 4.0,
             "Ácido Esteárico": 3.0, "Alcohol Cetílico": 4.5, "Manteca de Mango": 4.0, "Aceite de Arroz": 4.0,
             "Coco Glucoside": 2.0, "Glicerina": 2.0, "Niacinamida (B3)": 1.5, "Vitamina E": 0.5
         },
-        "instrucciones": "1. Mezclar polvos. 2. Fundir grasas. 3. Líquidos. 4. Unir y amasar."
+        "instrucciones": "1. **Polvos:** Mezclar SCI, Caolín, Avena, Arroz.\n2. **Fusión:** Fundir Esteárico, Cetílico, Mango, Aceite Arroz.\n3. **Líquido:** Disolver Niacinamida en Glicerina + Glucoside.\n4. **Fin:** Unir todo y amasar."
     },
     "💋 6. Bálsamo Labial Beso de Kerkus": {
+        "tipo": "Bálsamo",
         "minimo_stock": 10, "conservacion": "Evitar sol.",
         "ingredientes": {
             "Cera de Abejas": 6.0, "Manteca de Karité": 7.0, "Oleato Almendras (Caléndula)": 7.5, "Miel en Polvo": 1.5, "Vitamina E": 0.2
         },
-        "instrucciones": "1. Fundir Cera/Karité. 2. Oleato+Miel. 3. Envasar."
+        "instrucciones": "1. **Fusión:** Fundir Cera y Karité.\n2. **Mezcla:** Añade Oleato y Miel (dispersar bien).\n3. **Fin:** Añade Vit E y envasa."
     }
 }
 
 # ==========================================
-# 3. GESTIÓN DEL ESTADO (Stock inicial + Corrección de Nombres)
+# 3. GESTIÓN DEL ESTADO (STOCKS)
 # ==========================================
-
-# Corrección automática de claves antiguas si existen
 if 'stock_pt' not in st.session_state:
     st.session_state.stock_pt = {k: 0 for k in RECETAS.keys()}
-else:
-    # Si detectamos claves viejas, saneamos el diccionario
-    claves_nuevas = set(RECETAS.keys())
-    claves_actuales = set(st.session_state.stock_pt.keys())
-    if claves_actuales != claves_nuevas:
-        nuevo_pt = {k: 0 for k in claves_nuevas}
-        # Preservamos cantidades si coinciden nombres
-        for k, v in st.session_state.stock_pt.items():
-            if k in nuevo_pt: nuevo_pt[k] = v
-        st.session_state.stock_pt = nuevo_pt
+    # Ajuste inicial aproximado
+    st.session_state.stock_pt["🧴 1. Champú Nutritivo (Pelo Seco)"] = 4
+    st.session_state.stock_pt["🍏 3. Champú Purificante (Pelo Graso)"] = 5
+    st.session_state.stock_pt["☁️ 5. Limpiador Facial Nube de Arroz"] = 4
 
 if 'stock_mp' not in st.session_state:
     st.session_state.stock_mp = {
         "SCI": 1400.0, "Betaína de Coco": 1000.0, "Coco Glucoside": 250.0,
         "Manteca de Karité": 100.0, "Manteca de Cacao": 500.0, "Manteca de Mango": 150.0,
-        "Cera de Abejas": 306.0, "Cera Candelilla": 50.0, "BTMS-50": 500.0, 
+        "Cera de Abejas": 300.0, "Cera Candelilla": 50.0, "BTMS-50": 500.0, 
         "Ácido Esteárico": 500.0, "Alcohol Cetílico": 80.0,
         "Aceite de Almendras": 1000.0, "Oleato Almendras (Caléndula)": 500.0,
         "Aceite de Argán": 100.0, "Aceite de Coco": 300.0, 
@@ -148,7 +192,6 @@ if 'stock_mp' not in st.session_state:
         "Glicerina": 125.0, "Vitamina E": 50.0, "Leucidal": 30.0, "Euxyl Eco": 15.0,
         "AAEE (Geranio/Ylang)": 50.0, "AAEE (Naranja/Cedro)": 50.0, 
         "AAEE (Menta/Romero/Limón)": 90.0, "AAEE (Lavanda/Geranio)": 50.0,
-        "AAEE Salvia": 15.0, "AAEE Incienso": 15.0, "AAEE Sándalo": 15.0,
         "Ácido Láctico": 50.0, "Bicarbonato": 500.0, "SLSA": 50.0, "SCS": 400.0
     }
 
@@ -159,7 +202,7 @@ if 'stock_extra' not in st.session_state:
     }
 
 if 'finanzas' not in st.session_state:
-    st.session_state.finanzas = {"ingresos_totales": 0.0, "beneficio_total": 0.0, "gastos_material": 0.0}
+    st.session_state.finanzas = {"ingresos": 0.0, "beneficio": 0.0, "gastos": 0.0}
 
 if 'agenda' not in st.session_state: st.session_state.agenda = []
 if 'pedidos' not in st.session_state: st.session_state.pedidos = []
@@ -169,51 +212,51 @@ if 'cuaderno' not in st.session_state: st.session_state.cuaderno = []
 # 4. BARRA LATERAL
 # ==========================================
 with st.sidebar:
-    st.header("⚙️ Configuración")
+    st.header("⚙️ Panel de Control")
     modo_prueba = st.toggle("🛠️ MODO PRUEBAS", value=False)
     if modo_prueba: st.warning("⚠️ SIMULACIÓN")
-    else: st.success("✅ REAL")
+    else: st.success("✅ MODO REAL")
     
     st.divider()
     st.header("💰 Hucha Kerkus")
-    c_h1, c_h2 = st.columns(2)
-    c_h1.metric("Caja", f"{st.session_state.finanzas['ingresos_totales']:.2f}€")
-    c_h2.metric("Beneficio", f"{st.session_state.finanzas['beneficio_total']:.2f}€")
+    c1, c2 = st.columns(2)
+    c1.metric("Caja", f"{st.session_state.finanzas['ingresos']:.2f}€")
+    c2.metric("Beneficio", f"{st.session_state.finanzas['beneficio']:.2f}€")
     
     st.divider()
     st.header("📝 Notas")
-    nota = st.text_input("Apuntar:")
+    nota = st.text_input("Nota rápida:")
     if st.button("Guardar"):
         st.session_state.cuaderno.append(f"{datetime.date.today().strftime('%d/%m')} {nota}")
     with st.expander("Ver notas"):
         for n in st.session_state.cuaderno: st.write(f"- {n}")
 
 # ==========================================
-# 5. PESTAÑAS
+# 5. PESTAÑAS PRINCIPALES
 # ==========================================
-tabs = st.tabs(["🧪 FABRICACIÓN", "🤝 VENTAS", "⚗️ ALQUIMIA", "📅 AGENDA", "📦 ALMACÉN (Stock)"])
+tabs = st.tabs(["🧪 LABORATORIO", "🛒 CARRITO & COSTES", "🤝 VENTAS", "📦 ALMACÉN", "📅 AGENDA"])
 
-# --- TAB 1: FABRICACIÓN ---
+# --- TAB 1: LABORATORIO (FABRICACIÓN) ---
 with tabs[0]:
-    st.subheader("Laboratorio de Producción")
-    c1, c2, c3 = st.columns(3)
-    prod = c1.selectbox("Producto:", list(RECETAS.keys()))
-    cant = c2.number_input("Cantidad (Uds):", 1, 100, 10)
+    st.subheader("⚗️ Zona de Fabricación")
+    c_prod, c_cant, c_metrics = st.columns([2,1,2])
+    
+    prod = c_prod.selectbox("Receta:", list(RECETAS.keys()))
+    cant = c_cant.number_input("Cantidad (Uds):", 1, 100, 10)
     
     receta = RECETAS[prod]
-    coste = sum([q * st.session_state.costes_mp.get(i, 0.02) * cant for i, q in receta["ingredientes"].items()])
-    venta = cant * 10.0
-    beneficio = venta - coste
-    margen = (beneficio / venta) * 100 if venta > 0 else 0
+    coste_lote = sum([q * st.session_state.costes_mp.get(i, 0.02) for i, q in receta["ingredientes"].items()]) * cant
+    venta_estimada = cant * 10.0 # Precio medio
+    beneficio_lote = venta_estimada - coste_lote
     
-    with c3:
-        st.info(f"💰 Coste Lote: **{coste:.2f}€**\n\nBeneficio: **{beneficio:.2f}€** ({margen:.0f}%)")
-
-    if st.button("📜 Ver y Fabricar"):
+    with c_metrics:
+        st.info(f"💰 Coste Lote: **{coste_lote:.2f}€** | Beneficio: **{beneficio_lote:.2f}€**")
+    
+    if st.button("📖 Ver Receta y Fabricar"):
         st.divider()
-        c_ing, c_inst = st.columns([1, 2])
+        c_ing, c_pasos = st.columns([1,1])
         
-        falta = False
+        falta_stock = False
         with c_ing:
             st.markdown("### Ingredientes")
             for i, q in receta["ingredientes"].items():
@@ -221,165 +264,140 @@ with tabs[0]:
                 tengo = st.session_state.stock_mp.get(i, 0)
                 if tengo < nec:
                     st.error(f"{i}: Falta {nec-tengo:.1f}g")
-                    falta = True
+                    falta_stock = True
                 else:
                     st.success(f"{i}: {nec:.1f}g")
         
-        with c_inst:
+        with c_pasos:
+            st.markdown(f"### Instrucciones ({receta['tipo']})")
             st.markdown(receta["instrucciones"])
             st.divider()
+            ph = st.number_input("🧪 pH Medido:", 0.0, 14.0, 5.5)
+            if ph < 4.5: st.warning("Ácido -> Subir con Bicarbonato")
+            elif ph > 6.0: st.warning("Alcalino -> Bajar con Láctico")
+            else: st.success("pH Correcto")
             
-            st.markdown("#### 🩺 Doctor pH")
-            ph = st.number_input("pH medido:", 0.0, 14.0, 5.5, step=0.1)
-            if ph < 4.5: st.error("🚨 ÁCIDO -> Bicarbonato")
-            elif ph > 6.0: st.error("🚨 ALCALINO -> Láctico")
-            else: st.success("✅ pH Correcto")
-            
-            if st.button("✅ Confirmar Lote"):
-                if falta: st.error("❌ Falta Stock")
+            if st.button("✅ Confirmar Fabricación"):
+                if falta_stock: st.error("No hay ingredientes suficientes.")
                 else:
                     if not modo_prueba:
                         for i, q in receta["ingredientes"].items():
                             st.session_state.stock_mp[i] -= (q * cant)
                         st.session_state.stock_pt[prod] += cant
-                        st.session_state.finanzas["gastos_material"] += coste
-                        
-                        hoy = datetime.date.today().strftime("%Y-%m-%d")
-                        st.session_state.agenda.append({"fecha": hoy, "tipo": "Producción", "nota": f"Lote {cant}x {prod}"})
-                        st.session_state.agenda.append({"fecha": hoy, "tipo": "Instagram", "nota": f"📸 FOTO: {prod}"})
+                        st.session_state.finanzas["gastos"] += coste_lote
+                        st.session_state.agenda.append({"f": datetime.date.today(), "t": "Producción", "d": f"{cant}x {prod}"})
                         st.balloons()
-                        st.success("Fabricado.")
+                        st.success("Lote registrado.")
                         st.rerun()
-                    else: st.info("Simulación OK")
 
-# --- TAB 2: VENTAS ---
+# --- TAB 2: CARRITO & COSTES (NUEVO) ---
 with tabs[1]:
-    c_ped, c_rap = st.columns([2, 1])
-    with c_ped:
+    st.subheader("💶 Costes y Compras")
+    
+    c_costes, c_carrito = st.columns(2)
+    
+    with c_costes:
+        st.markdown("### 📝 Historial de Precios (€/g)")
+        df_costes = pd.DataFrame(list(st.session_state.costes_mp.items()), columns=["Ingrediente", "Precio/g"])
+        # Edición rápida de costes
+        ing_edit = st.selectbox("Editar precio de:", list(st.session_state.costes_mp.keys()))
+        nuevo_precio = st.number_input(f"Nuevo precio para {ing_edit}:", 0.000, 10.000, st.session_state.costes_mp[ing_edit], format="%.3f")
+        if st.button("Actualizar Precio"):
+            st.session_state.costes_mp[ing_edit] = nuevo_precio
+            st.success("Precio actualizado.")
+            st.rerun()
+            
+    with c_carrito:
+        st.markdown("### 🛒 Carrito Inteligente (Proporción)")
+        st.info("Calcula qué comprar para gastar el stock a la vez.")
+        
+        ing_base = st.selectbox("Voy a comprar (Ingrediente Base):", ["SCI", "Betaína de Coco", "Alcohol Cetílico"])
+        cant_base = st.number_input(f"Cantidad de {ing_base} (g):", 100, 5000, 1000)
+        
+        if st.button("Calcular Proporción"):
+            st.write(f"Si compras **{cant_base}g de {ing_base}**, necesitarás aprox:")
+            # Lógica simple basada en proporción media de champús
+            # SCI es aprox 45% de la fórmula solida.
+            ratio = cant_base / 45.0 # Ratio por "parte"
+            st.write(f"- Betaína de Coco: {8.5 * ratio:.0f}g")
+            st.write(f"- Ácido Esteárico: {5.0 * ratio:.0f}g")
+            st.write(f"- Mantecas (Karité/Mango): {6.0 * ratio:.0f}g")
+            st.write(f"- Aceites Líquidos: {7.0 * ratio:.0f}g")
+            st.caption("*Cálculo estimado para fórmulas de champú estándar.")
+
+# --- TAB 3: VENTAS ---
+with tabs[2]:
+    c_encargos, c_rapida = st.columns(2)
+    with c_encargos:
         st.subheader("📋 Encargos")
-        with st.expander("➕ Nuevo"):
+        with st.expander("Nuevo Encargo"):
             cli = st.text_input("Cliente:")
-            pp = st.selectbox("Prod:", list(RECETAS.keys()), key="p_en")
-            qq = st.number_input("Cant:", 1, 50, 1, key="q_en")
+            p_enc = st.selectbox("Prod:", list(RECETAS.keys()), key="enc_p")
+            c_enc = st.number_input("Cant:", 1, 50, 1, key="enc_c")
             if st.button("Apuntar"):
-                if not modo_prueba:
-                    st.session_state.pedidos.append({"c": cli, "p": pp, "q": qq, "f": datetime.date.today().strftime("%d/%m")})
-                    st.rerun()
-
-        for k, p in enumerate(st.session_state.pedidos):
-            st.write(f"**{p['c']}**: {p['q']}x {p['p']}")
-            if st.button("✅ Cobrar", key=f"e_{k}"):
-                if not modo_prueba:
-                    if st.session_state.stock_pt[p['p']] >= p['q']:
-                        st.session_state.stock_pt[p['p']] -= p['q']
-                        ingreso = p['q'] * 10.0
-                        # Coste estimado para beneficio
-                        c_est = sum([q * st.session_state.costes_mp.get(i, 0.02) for i, q in RECETAS[p['p']]["ingredientes"].items()]) * p['q']
-                        st.session_state.finanzas["ingresos_totales"] += ingreso
-                        st.session_state.finanzas["beneficio_total"] += (ingreso - c_est)
-                        st.session_state.agenda.append({"fecha": datetime.date.today().strftime("%Y-%m-%d"), "tipo": "Venta", "nota": f"ENTREGA: {p['c']}"})
-                        st.session_state.pedidos.pop(k)
-                        st.rerun()
-                    else: st.error("Falta Stock")
-            st.divider()
-
-    with c_rap:
-        st.subheader("⚡ Venta Rápida")
-        vp = st.selectbox("Prod:", list(RECETAS.keys()), key="v_fa")
-        vq = st.number_input("Cant:", 1, 20, 1, key="q_fa")
-        if st.button("Cobrar Rápido"):
-            if not modo_prueba:
-                if st.session_state.stock_pt[vp] >= vq:
-                    st.session_state.stock_pt[vp] -= vq
-                    ingreso = vq * 10.0
-                    c_est = sum([q * st.session_state.costes_mp.get(i, 0.02) for i, q in RECETAS[vp]["ingredientes"].items()]) * vq
-                    st.session_state.finanzas["ingresos_totales"] += ingreso
-                    st.session_state.finanzas["beneficio_total"] += (ingreso - c_est)
-                    st.session_state.agenda.append({"fecha": datetime.date.today().strftime("%Y-%m-%d"), "tipo": "Venta", "nota": f"Venta {vq}x {vp}"})
-                    st.success("Vendido.")
+                st.session_state.pedidos.append({"c": cli, "p": p_enc, "q": c_enc})
+                st.rerun()
+        
+        for i, p in enumerate(st.session_state.pedidos):
+            st.write(f"{p['c']}: {p['q']}x {p['p']}")
+            if st.button("Cobrar", key=f"cob_{i}"):
+                if st.session_state.stock_pt[p['p']] >= p['q']:
+                    st.session_state.stock_pt[p['p']] -= p['q']
+                    ingreso = p['q'] * 10.0
+                    st.session_state.finanzas["ingresos"] += ingreso
+                    st.session_state.finanzas["beneficio"] += (ingreso * 0.7) # Estimado 70%
+                    st.session_state.agenda.append({"f": datetime.date.today(), "t": "Venta", "d": f"Entrega {p['c']}"})
+                    st.session_state.pedidos.pop(i)
                     st.rerun()
                 else: st.error("Falta Stock")
 
-# --- TAB 3: ALQUIMIA ---
-with tabs[2]:
-    st.subheader("⚗️ Macerados")
-    pl = st.text_input("Planta:")
-    ba = st.selectbox("Base:", ["Almendras", "Oliva", "Girasol", "Uva", "Jojoba"])
-    mt = st.selectbox("Método:", ["Solar (40 días)", "Baño María", "Caliente"])
-    if st.button("Crear Alerta"):
-        if not modo_prueba:
-            d = 40 if "Solar" in mt else 0
-            fin = datetime.date.today() + datetime.timedelta(days=d)
-            st.session_state.agenda.append({"fecha": fin.strftime("%Y-%m-%d"), "tipo": "Alerta", "nota": f"FILTRAR: {pl} en {ba}"})
-            st.success(f"Alerta para {fin}")
+    with c_rapida:
+        st.subheader("⚡ Venta Directa")
+        p_rap = st.selectbox("Prod:", list(RECETAS.keys()), key="rap_p")
+        c_rap = st.number_input("Cant:", 1, 20, 1, key="rap_c")
+        if st.button("Vender Ya"):
+            if st.session_state.stock_pt[p_rap] >= c_rap:
+                st.session_state.stock_pt[p_rap] -= c_rap
+                st.session_state.finanzas["ingresos"] += (c_rap * 10.0)
+                st.session_state.finanzas["beneficio"] += (c_rap * 7.0)
+                st.session_state.agenda.append({"f": datetime.date.today(), "t": "Venta", "d": f"Venta Rápida {c_rap}x"})
+                st.success("Vendido")
+                st.rerun()
+            else: st.error("Falta Stock")
 
-# --- TAB 4: AGENDA ---
+# --- TAB 4: ALMACÉN (TOTALMENTE EDITABLE) ---
 with tabs[3]:
-    st.subheader("📅 Historial")
-    for x in sorted(st.session_state.agenda, key=lambda i: i['fecha'], reverse=True):
-        icon = "🧴" if x["tipo"] == "Producción" else "💰" if x["tipo"] == "Venta" else "📸"
-        st.write(f"**{x['fecha']}** {icon} {x['nota']}")
-        st.divider()
-
-# --- TAB 5: ALMACÉN (NUEVO: EDITOR MANUAL) ---
-with tabs[4]:
     st.subheader("📦 Gestión de Inventario")
     
-    # 1. HERRAMIENTA DE AJUSTE MANUAL
-    with st.expander("📝 Recepción de Pedidos / Ajuste Manual", expanded=True):
-        c_aj1, c_aj2, c_aj3 = st.columns(3)
-        ing_ajuste = c_aj1.selectbox("Ingrediente:", sorted(list(st.session_state.stock_mp.keys())))
-        tipo_ajuste = c_aj2.radio("Acción:", ["Sumar Compra (+)", "Corregir Inventario (=)"], horizontal=True)
-        cant_ajuste = c_aj3.number_input("Cantidad (g):", 0.0, 5000.0, 0.0, step=10.0)
-        
-        c_p1, c_p2 = st.columns(2)
-        nuevo_precio = c_p1.number_input(f"Coste actual ({st.session_state.costes_mp.get(ing_ajuste, 0):.3f} €/g). Nuevo:", 0.000, 5.000, st.session_state.costes_mp.get(ing_ajuste, 0.0), format="%.3f")
-        
-        if st.button("💾 Guardar Cambios en Stock"):
-            if not modo_prueba:
-                # 1. Actualizar Precio
-                st.session_state.costes_mp[ing_ajuste] = nuevo_precio
-                
-                # 2. Actualizar Cantidad
-                if "Sumar" in tipo_ajuste:
-                    st.session_state.stock_mp[ing_ajuste] += cant_ajuste
-                    msg = f"Añadidos {cant_ajuste}g a {ing_ajuste}."
-                else:
-                    st.session_state.stock_mp[ing_ajuste] = cant_ajuste
-                    msg = f"Stock de {ing_ajuste} corregido a {cant_ajuste}g."
-                
-                st.success(f"✅ {msg} Precio actualizado a {nuevo_precio} €/g.")
-                st.rerun()
-            else: st.info("Simulación.")
-
-    st.divider()
-
-    # 2. VISUALIZACIÓN
-    c1, c2, c3 = st.columns(3)
+    tipo_stock = st.radio("¿Qué quieres editar?", ["Materia Prima", "Producto Terminado", "Extras"], horizontal=True)
     
-    with c1:
-        st.info("🛍️ PRODUCTO TERMINADO")
-        for p, c in st.session_state.stock_pt.items():
-            min_s = RECETAS.get(p, {}).get("minimo_stock", 0)
-            if c < min_s: st.error(f"🔴 {p}: {c}")
-            elif c > 20: st.warning(f"⚠️ {p}: {c}")
-            else: st.success(f"🟢 {p}: {c}")
+    if tipo_stock == "Materia Prima":
+        diccionario = st.session_state.stock_mp
+    elif tipo_stock == "Producto Terminado":
+        diccionario = st.session_state.stock_pt
+    else:
+        diccionario = st.session_state.stock_extra
+        
+    # EDITOR
+    c_edit1, c_edit2 = st.columns([3, 1])
+    item_edit = c_edit1.selectbox("Elemento:", sorted(list(diccionario.keys())))
+    cant_actual = diccionario[item_edit]
+    nueva_cant = c_edit2.number_input("Cantidad Real:", 0.0, 10000.0, float(cant_actual))
+    
+    if st.button("💾 Guardar Corrección"):
+        if not modo_prueba:
+            diccionario[item_edit] = nueva_cant
+            st.success(f"Stock de {item_edit} actualizado a {nueva_cant}")
+            st.rerun()
+    
+    st.divider()
+    st.markdown("### Visualización de Stock")
+    # Mostrar tabla simple
+    df_stock = pd.DataFrame(list(diccionario.items()), columns=["Item", "Cantidad"])
+    st.dataframe(df_stock, use_container_width=True)
 
-    with c2:
-        st.warning("📦 MATERIA PRIMA")
-        # Mostrar solo si hay stock o si se ha editado
-        for i, g in sorted(st.session_state.stock_mp.items()):
-            color = "red" if g < 50 else "black"
-            st.markdown(f"<span style='color:{color}'>**{i}**: {g:.1f}g</span>", unsafe_allow_html=True)
-
-    with c3:
-        st.success("🌿 EXTRAS")
-        with st.expander("➕ Añadir"):
-            en = st.text_input("Nombre:")
-            eq = st.number_input("Gramos:", 0, 5000)
-            if st.button("Guardar Extra"):
-                if not modo_prueba:
-                    st.session_state.stock_extra[en] = eq
-                    st.rerun()
-        for k, v in st.session_state.stock_extra.items():
-            st.write(f"🌾 {k}: {v}g")
+# --- TAB 5: AGENDA ---
+with tabs[4]:
+    st.subheader("📅 Historial")
+    for x in st.session_state.agenda[::-1]:
+        st.write(f"**{x['f']}** - {x['t']}: {x['d']}")
