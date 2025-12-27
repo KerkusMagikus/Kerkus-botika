@@ -11,7 +11,160 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Carga del Logo con manejo de errores silencioso
+# --- ESTILOS MÁGICOS (CSS MEDIEVAL/TROVADOR) ---
+st.markdown("""
+<style>
+    /* IMPORTAR FUENTES ANTIGUAS */
+    @import url('https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@400;700&display=swap');
+
+    /* VARIABLES DE COLOR (Paleta Kerkus) */
+    :root {
+        --color-oro: #d4af37;
+        --color-marron-oscuro: #3e2723;
+        --color-marron-medio: #5d4037;
+        --color-pergamino: #fff8e1; /* Fondo claro */
+        --color-cuero-claro: #d7ccc8;
+        --color-exito-antiguo: #556b2f; /* Verde oliva */
+        --color-error-antiguo: #8b0000; /* Rojo oscuro */
+        --color-aviso-antiguo: #daa520; /* Dorado oscuro */
+    }
+
+    /* FONDO Y TIPOGRAFÍA GENERAL */
+    .stApp {
+        background-color: var(--color-pergamino);
+        font-family: 'Alegreya', serif;
+        color: var(--color-marron-oscuro);
+    }
+
+    /* TÍTULOS */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Cinzel Decorative', cursive;
+        color: var(--color-marron-oscuro);
+        text-shadow: 1px 1px 2px rgba(212, 175, 55, 0.3); /* Sombra dorada suave */
+    }
+    h1 {
+        font-weight: 700;
+        border-bottom: 2px solid var(--color-oro);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    /* BARRA LATERAL */
+    section[data-testid="stSidebar"] {
+        background-color: var(--color-cuero-claro);
+        border-right: 3px solid var(--color-marron-medio);
+    }
+    section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {
+        color: var(--color-marron-oscuro);
+        text-shadow: none;
+    }
+
+    /* BOTONES (Estilo Placa Dorada) */
+    .stButton > button {
+        font-family: 'Cinzel Decorative', cursive;
+        font-weight: bold;
+        color: var(--color-marron-oscuro);
+        background: linear-gradient(to bottom, #e6c35c, #d4af37);
+        border: 2px solid var(--color-marron-medio);
+        border-radius: 8px;
+        padding: 10px 24px;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    .stButton > button:hover {
+        background: linear-gradient(to bottom, #d4af37, #b8860b);
+        color: white;
+        border-color: var(--color-marron-oscuro);
+        transform: translateY(-2px);
+        box-shadow: 3px 3px 8px rgba(0,0,0,0.3);
+    }
+    .stButton > button:active {
+         transform: translateY(1px);
+         box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* PESTAÑAS (TABS) */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: transparent;
+        padding: 5px;
+        border-bottom: 2px solid var(--color-marron-medio);
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-family: 'Cinzel Decorative', cursive;
+        color: var(--color-marron-medio);
+        background-color: var(--color-cuero-claro);
+        border-radius: 8px 8px 0 0;
+        border: 1px solid var(--color-marron-medio);
+        border-bottom: none;
+        padding: 10px 15px;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: var(--color-oro) !important;
+        color: var(--color-marron-oscuro) !important;
+        font-weight: bold;
+        border-bottom: 3px solid var(--color-marron-oscuro) !important;
+    }
+
+    /* ALERTAS (Colores Antiguos) */
+    .stAlert[data-baseweb="notification"][aria-label="Success"] {
+        background-color: rgba(85, 107, 47, 0.2); /* Verde oliva claro */
+        color: var(--color-exito-antiguo);
+        border-left: 5px solid var(--color-exito-antiguo);
+    }
+    .stAlert[data-baseweb="notification"][aria-label="Info"] {
+        background-color: rgba(212, 175, 55, 0.2); /* Dorado claro */
+        color: var(--color-marron-oscuro);
+        border-left: 5px solid var(--color-oro);
+    }
+    .stAlert[data-baseweb="notification"][aria-label="Warning"] {
+        background-color: rgba(218, 165, 32, 0.2); /* Mostaza claro */
+        color: var(--color-marron-oscuro);
+        border-left: 5px solid var(--color-aviso-antiguo);
+    }
+    .stAlert[data-baseweb="notification"][aria-label="Error"] {
+        background-color: rgba(139, 0, 0, 0.2); /* Rojo antiguo claro */
+        color: var(--color-error-antiguo);
+        border-left: 5px solid var(--color-error-antiguo);
+    }
+
+    /* CAJAS DE TEXTO E INPUTS */
+    .stTextInput > div > div > input,
+    .stNumberInput > div > div > input,
+    .stSelectbox > div > div > div {
+        font-family: 'Alegreya', serif;
+        background-color: #fffbf0; /* Pergamino muy claro */
+        color: var(--color-marron-oscuro);
+        border: 2px solid var(--color-marron-medio);
+        border-radius: 5px;
+    }
+    .stTextInput > div > div > input:focus,
+    .stNumberInput > div > div > input:focus,
+    .stSelectbox > div > div > div:focus-within {
+        border-color: var(--color-oro);
+        box-shadow: 0 0 5px var(--color-oro);
+    }
+
+    /* DIVISORES */
+    hr {
+        border-color: var(--color-marron-medio);
+        opacity: 0.5;
+        border-style: dashed;
+    }
+    
+    /* EXPANDERS */
+    .streamlit-expanderHeader {
+        font-family: 'Cinzel Decorative', cursive;
+        color: var(--color-marron-oscuro);
+        background-color: var(--color-cuero-claro);
+        border-radius: 5px;
+        border: 1px solid var(--color-marron-medio);
+    }
+
+</style>
+""", unsafe_allow_html=True)
+
+# Carga del Logo
 try:
     st.image("logo_kerkus.jpg", width=180)
 except:
